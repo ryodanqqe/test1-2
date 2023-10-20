@@ -8,74 +8,61 @@ import (
 	"time"
 )
 
-const coingeckoURL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1"
+const URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1"
 
 type CoinData struct {
-	ID           string  `json:"id"`
 	Symbol       string  `json:"symbol"`
 	Name         string  `json:"name"`
 	CurrentPrice float64 `json:"current_price"`
 }
 
-var (
-	client         = &http.Client{Timeout: 10 * time.Second}
-	cache          = make(map[string]CoinData)
-	lastUpdateTime time.Time
-)
+func fetchCoinData() ([]CoinData, error) {
 
-func fetchCoinData() error {
-	resp, err := client.Get(coingeckoURL)
+	var client = &http.Client{Timeout: 2 * time.Second}
+
+	resp, err := client.Get(URL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status: %s", resp.Status)
+		return nil, fmt.Errorf("request failed, status: %s", resp.Status)
 	}
 
 	var data []CoinData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Update cache and lastUpdateTime
-	for _, coin := range data {
-		cache[coin.Symbol] = coin
-	}
-	lastUpdateTime = time.Now()
-
-	return nil
-}
-
-func getCoinPrice(symbol string) (float64, error) {
-	if time.Since(lastUpdateTime) > 10*time.Minute {
-		if err := fetchCoinData(); err != nil {
-			return 0, err
-		}
-	}
-
-	if coin, found := cache[symbol]; found {
-		return coin.CurrentPrice, nil
-	}
-
-	return 0, fmt.Errorf("cryptocurrency with symbol %s not found", symbol)
+	return data, nil
 }
 
 func main() {
-	// Fetch initial data
-	if err := fetchCoinData(); err != nil {
-		fmt.Printf("Failed to fetch initial data: %v\n", err)
-		return
-	}
+	coinSymbol := "btc" // change coinSymbol
 
-	// Example: Get the price of Bitcoin (BTC)
-	price, err := getCoinPrice("btc")
+	timeInterval := 10 * time.Minute
+
+	cryptoData, err := fetchCoinData()
 	if err != nil {
-		fmt.Printf("Failed to get price: %v\n", err)
+		fmt.Printf("failed to fetch data: %v\n", err)
 		return
 	}
 
-	fmt.Printf("Price of BTC: $%.2f USD\n", price)
+	var found bool
+
+	for _, coin := range cryptoData {
+		if coin.Symbol == coinSymbol {
+			fmt.Printf("Course of currency %v (%v) is: %v", coin.Name, coin.Symbol, coin.CurrentPrice)
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		fmt.Printf("currency with symbol %s was not fiund", coinSymbol)
+	}
+
+	time.Sleep(timeInterval)
 }
