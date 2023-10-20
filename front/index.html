@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Список валют</title>
+<style>
+    
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+    
+td, th {
+    border: 1px solid #000000;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:first-child {
+    background-color: white;
+}
+
+tr:nth-child(-n+5) {
+    background-color: rgb(85, 85, 255);
+}
+
+tr[data-symbol="usdt"] {
+    background-color: rgb(106, 246, 103);
+}
+   
+</style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Symbol</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody id="currencyTable">
+        </tbody>
+    </table>
+    <script src="js/script.js"></script>
+</body>
+</html>
